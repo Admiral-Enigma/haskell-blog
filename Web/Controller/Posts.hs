@@ -6,6 +6,7 @@ import Web.View.Posts.New
 import Web.View.Posts.Edit
 import Web.View.Posts.Show
 import Web.Controller.Prelude (Post'(createdAt))
+import qualified Text.MMark as MMark
 
 instance Controller PostsController where
     action PostsAction = do
@@ -54,7 +55,15 @@ instance Controller PostsController where
         setSuccessMessage "Post deleted"
         redirectTo PostsAction
 
+validMarkdown :: Text -> ValidatorResult
+validMarkdown text =
+    case MMark.parse "" text of
+        Left _ -> Failure "Please provide valid Markdown"
+        Right _ -> Success
+
 buildPost post = post
     |> fill @["title","body"]
     |> validateField #title nonEmpty
     |> validateField #body nonEmpty
+    |> validateField #body validMarkdown
+
